@@ -85,5 +85,4 @@ while True:
         print("정답:",end=" ")
         for answer in com_list:
            print(answer,end=" ")
-        break
-    
+        break    
