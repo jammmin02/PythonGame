@@ -2,8 +2,6 @@ import pygame
 import sys
 import random
 
-CYAN = (0, 255, 255) # 하늘색
-GRAY = (96, 96, 96) # 회색
 BLACK = (0, 0, 0) # 검은색
 
 MAZE_W = 11 # 미로 가로 방향 길이 (가로 칸 수)
@@ -24,6 +22,11 @@ for y in range(DUNGEON_H): # 반복
 
 imgWall = pygame.image.load("wall.png") # 벽 이미지
 imgFloor = pygame.image.load("floor.png") # 통로 이미지
+imgPlayer = pygame.image.load("player.png") # 통로 이미지
+
+# 던전 상 위치
+pl_x = 4 # 플레이어 x좌표
+pl_y = 4 # 플레이어 y좌표
 
 def make_dungeon() : # 던전 자동 생성
     XP = [0, 1, 0, -1] # 기둥에서 벽을 그리기 위한 값 정의
@@ -83,46 +86,52 @@ def make_dungeon() : # 던전 자동 생성
                     if maze[y][x + 1] == 0: # 미로 오른쪽이 길이라면
                         dungeon[dy][dx + 1] = 0 # 통로를 오른쪽으로 연장
 
+def draw_dungeon(bg): # 던전 표시
+    bg.fill(BLACK)
+    for y in range(-5, 6): 
+        for x in range(-5, 6): 
+            X = (x + 5) * 16 # 화면 표시용 x 좌표 계산
+            Y = (y + 5) * 16 # 화면 표시용 y 좌표 계산
+            dx = pl_x + x # 던전칸 x 좌표 계산
+            dy = pl_y + y # 던전칸 x 좌표 계산
+            if 0 <= dx and dx < DUNGEON_W and 0 <= dy and dy < DUNGEON_H: # 던전데이터가 정의된 범위 내에서
+                if dungeon[dy][dx] == 0 : # 길이면
+                    bg.blit(imgFloor, [X, Y])
+                if dungeon[dy][dx] == 9 : # 벽이면
+                    bg.blit(imgWall, [X, Y])
+            if x == 0 and y == 0: # 주인공 표시
+                bg.blit(imgPlayer, [X, Y - 8])
+
+def move_player(): # 주인공 이동
+    global pl_x, pl_y # 필요한 변수 전역 변수 선언
+    key = pygame.key.get_pressed()
+    if key[pygame.K_UP] == 1: # up키를 누르면
+        if dungeon[pl_y - 1][pl_x] != 9 : pl_y = pl_y - 1  # 해당 방향이 벽이 아니면 Y좌표로 변경 
+    if key[pygame.K_DOWN] == 1: # down키를 누르면
+        if dungeon[pl_y + 1][pl_x] != 9 : pl_y = pl_y + 1  # 해당 방향이 벽이 아니면 Y좌표로 변경
+    if key[pygame.K_LEFT] == 1: # left키를 누르면
+        if dungeon[pl_y][pl_x - 1] != 9 : pl_x = pl_x - 1  # 해당 방향이 벽이 아니면 X좌표로 변경                                   
+    if key[pygame.K_RIGHT] == 1: # right키를 누르면
+        if dungeon[pl_y][pl_x + 1] != 9 : pl_x = pl_x + 1  # 해당 방향이 벽이 아니면 X좌표로 변경        
+
 def main(): # 메인 처리 수행 함수
     pygame.init() # 모듈 초기화
-    pygame.display.set_caption("던전  생성") # 타이틀
-    screen = pygame.display.set_mode((1056, 432)) # 스크린 초기화
+    pygame.display.set_caption("던전 내 걷기") # 타이틀
+    screen = pygame.display.set_mode((176, 176)) # 스크린 초기화
     clock = pygame.time.Clock()
-
-    make_dungeon() # 던전 호출
-
+    
+    make_dungeon()
+    
     while True: 
         for event in pygame.event.get():
             if event.type == pygame.QUIT : # X버튼 누르면 종료
                 pygame.quit()
                 sys.exit() # 프로그램 종료
-            if event.type == pygame.KEYDOWN: # 키를 눌렀을 떄
-                if event.key == pygame.K_SPACE: # 스페이스 키라면 미로 생성 
-                    make_dungeon()
-                    
-        # 확인용 미로 그리기
-        for y in range(MAZE_H): # 2중 반복           
-            for x in range(MAZE_W): # 반복해서 미로 표시
-                X = x * 48 # 표시 할 x 좌표 계산
-                Y = y * 48 # 표시 할 Y 좌표 계산                
-                if maze[y][x] == 0: # 통로라면
-                    pygame.draw.rect(screen, CYAN, [X, Y, 48, 48])
-                
-                if maze[y][x] == 1: # 벽
-                    pygame.draw.rect(screen, GRAY, [X, Y, 48, 48])
-                
-            # 던전 그리기
-            for y in range(DUNGEON_H):
-                for x in range(DUNGEON_W):
-                    X = x * 16 + 528 # 표시 할 x 좌표 계산
-                    Y = y * 16 # 표시 할 Y 좌표 계산 
-                    if dungeon[y][x] == 0 : # 길이라면
-                        screen.blit(imgFloor, [X, Y])
-                    if dungeon[y][x] == 9 : # 벽이라면
-                        screen.blit(imgWall, [X, Y])
 
-        pygame.display.update() # 화면 업데이트
-        clock.tick(2) # 프레임 설정
+        move_player()
+        draw_dungeon(screen)
+        pygame.display.update()
+        clock.tick(5)
 
 if __name__ == '__main__' :
     main()
